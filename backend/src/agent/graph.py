@@ -89,9 +89,7 @@ import requests
 
 import requests
 import os
-os.environ["GOOGLE_SEARCH_CX"] = "14c612a1e778d40b3"
 
-os.environ["GOOGLE_SEARCH_API_KEY"] = "AIzaSyAvmLp39Jc1num0PaLxQ7gU1s8XEx1PRVk"
 DEFAULT_SEARCH_ENGINE_TIMEOUT = 100
 REFERENCE_COUNT = 5
 GOOGLE_SEARCH_ENDPOINT = "https://customsearch.googleapis.com/customsearch/v1"
@@ -150,7 +148,7 @@ def web_research(state: WebSearchState, config: RunnableConfig) -> OverallState:
     formatted_lines = []
     sources_gathered = []
     for res in results:
-        print(res, "qqq")
+        # print(res, "qqq")
         title = res.get("title", "")
         # href = res.get("href", "")
         # body = res.get("body", "")
