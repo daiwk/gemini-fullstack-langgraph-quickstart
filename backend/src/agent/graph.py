@@ -81,6 +81,46 @@ def continue_to_web_research(state: QueryGenerationState):
         for idx, search_query in enumerate(state["query_list"])
     ]
 
+import requests
+from bs4 import BeautifulSoup
+import urllib.parse
+
+import requests
+
+import requests
+import os
+os.environ["GOOGLE_SEARCH_CX"] = "14c612a1e778d40b3"
+
+os.environ["GOOGLE_SEARCH_API_KEY"] = "AIzaSyAvmLp39Jc1num0PaLxQ7gU1s8XEx1PRVk"
+DEFAULT_SEARCH_ENGINE_TIMEOUT = 100
+REFERENCE_COUNT = 5
+GOOGLE_SEARCH_ENDPOINT = "https://customsearch.googleapis.com/customsearch/v1"
+
+def search_with_google(query: str, subscription_key: str, cx: str):
+    """
+    Search with google and return the contexts.
+    """
+    params = {
+        "key": subscription_key,
+        "cx": cx,
+        "q": query,
+        "num": REFERENCE_COUNT,
+    }
+    response = requests.get(
+        GOOGLE_SEARCH_ENDPOINT, params=params, timeout=DEFAULT_SEARCH_ENGINE_TIMEOUT
+    )
+    if not response.ok:
+        print(f"{response.status_code} {response.text}")
+        raise HTTPException(response.status_code, "Search engine error.")
+    json_content = response.json()
+    try:
+        contexts = json_content["items"][:REFERENCE_COUNT]
+    except KeyError:
+        print(f"Error encountered: {json_content}")
+        return []
+    return contexts
+
+
 
 def web_research(state: WebSearchState, config: RunnableConfig) -> OverallState:
     """LangGraph node that performs web research using DuckDuckGo.
@@ -98,15 +138,24 @@ def web_research(state: WebSearchState, config: RunnableConfig) -> OverallState:
     # Configure
     configurable = Configuration.from_runnable_config(config)
     query = state["search_query"]
-    with DDGS() as ddgs:
-        results = list(ddgs.text(query, max_results=5))
+
+    search_api_key = os.environ["GOOGLE_SEARCH_API_KEY"]
+    # with DDGS() as ddgs:
+    #     print(query, "xxx")
+    #     results = list(ddgs.text(query, max_results=5))
+
+    results = search_with_google(query, search_api_key, 
+    os.environ["GOOGLE_SEARCH_CX"])
 
     formatted_lines = []
     sources_gathered = []
     for res in results:
+        print(res, "qqq")
         title = res.get("title", "")
-        href = res.get("href", "")
-        body = res.get("body", "")
+        # href = res.get("href", "")
+        # body = res.get("body", "")
+        href = res.get("link", "")
+        body = res.get("snippet", "")
         formatted_lines.append(f"{title}: {body} ({href})")
         sources_gathered.append({"label": title, "short_url": href, "value": href})
 
